@@ -1,0 +1,47 @@
+name: build
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Show toolchain
+        shell: pwsh
+        run: |
+          msbuild -version
+          Get-ChildItem "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework" -Name
+
+      - name: Build (Release / Any CPU)
+        run: msbuild NatTypeTester.sln /p:Configuration=Release /p:Platform="Any CPU" /v:minimal /nologo
+
+      - name: Collect artifact
+        shell: pwsh
+        run: |
+          $src = "NatTypeTester\bin\Release"
+          if (-not (Test-Path "$src\NatTypeTester.exe")) {
+            Write-Error "build output not found: $src\NatTypeTester.exe"
+            exit 1
+          }
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item "$src\NatTypeTester.exe" out\
+          if (Test-Path "$src\NatTypeTester.exe.config") { Copy-Item "$src\NatTypeTester.exe.config" out\ }
+          Get-ChildItem out | Format-Table Name, Length
+          (Get-FileHash "out\NatTypeTester.exe" -Algorithm SHA256).Hash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NatTypeTester-friendly
+          path: out/
+          if-no-files-found: error
