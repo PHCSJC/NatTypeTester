@@ -328,3 +328,13 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# ---- Lumisoft.Net 源码里的 Log/ 和 Debug/ 是源代码目录，不是构建产物 ----
+# 上面 VisualStudio.gitignore 的 [Ll]og/ 、[Dd]ebug/ 会把它们整目录忽略掉，
+# 导致 CI 上 csc 报 CS2001: Source file ... could not be found。
+!NatTypeTester/Lumisoft.Net/Net/Log/
+!NatTypeTester/Lumisoft.Net/Net/Log/**
+!NatTypeTester/Lumisoft.Net/Net/RTP/Debug/
+!NatTypeTester/Lumisoft.Net/Net/RTP/Debug/**
+!NatTypeTester/Lumisoft.Net/Net/SIP/Debug/
+!NatTypeTester/Lumisoft.Net/Net/SIP/Debug/**
