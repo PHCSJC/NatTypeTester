@@ -12,6 +12,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_ICO = os.path.join(HERE, "..", "NatTypeTester", "app.ico")
+PIC = os.path.join(HERE, "..", "pic")
 
 S = 1024            # 超采样画布
 R = 208             # 圆角半径
@@ -88,13 +89,26 @@ def main():
     head(x_l, -1, C_LEFT)
     head(x_r, 1, C_RIGHT)
 
-    base.resize((256, 256), Image.LANCZOS).save(os.path.join(HERE, "icon_256.png"))
-    base.resize((512, 512), Image.LANCZOS).save("icon-preview.png")
-
     sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
     imgs = [base.resize(s, Image.LANCZOS) for s in sizes]
-    imgs[-1].save(os.path.join(HERE, "..", "NatTypeTester", "app.ico"), format="ICO", sizes=sizes, append_images=imgs[:-1])
-    print("ok:", sizes)
+    imgs[-1].save(OUT_ICO, format="ICO", sizes=sizes, append_images=imgs[:-1])
+
+    # 仓库里的预览图
+    os.makedirs(PIC, exist_ok=True)
+    base.resize((512, 512), Image.LANCZOS).save(os.path.join(PIC, "icon.png"))
+
+    # 各尺寸实拍对照（上排原尺寸，下排 4x 最近邻放大，方便看小尺寸糊不糊）
+    checks = [16, 24, 32, 48, 64]
+    sheet = Image.new("RGBA", (len(checks) * 140 + 10, 300), (245, 245, 248, 255))
+    x = 10
+    for s in checks:
+        im = base.resize((s, s), Image.LANCZOS)
+        sheet.alpha_composite(im, (x, 20))
+        sheet.alpha_composite(im.resize((128, 128), Image.NEAREST), (x, 150))
+        x += 140
+    sheet.save(os.path.join(PIC, "icon-sizes.png"))
+
+    print("ok:", sizes, "->", os.path.normpath(OUT_ICO))
 
 
 if __name__ == "__main__":
