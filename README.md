@@ -65,19 +65,21 @@ Google 的 `stun.l.google.com` 用的是 **19302** 端口，不是 3478，
 
 ### 3. 图标
 
-上游 exe 用的是 .NET 默认的空白图标，桌面上分不出是什么程序。
+沿用 1.1 版窗口上那个图标 —— 也就是 .NET WinForms 的默认窗体图标
+（浅灰面板上排着白 / 金 / 红 / 蓝几个控件块）。
 
-新图标：一堵虚线（NAT 边界）被一条双向箭头凿穿 —— UDP 打洞；
-左端绿色是内网侧、右端橙色是公网侧。
+上游这个图标只嵌在 `System.Windows.Forms.dll` 里，而且只有 32×32；
+1.3 单独发布的 exe 已经不带它了，窗口上是个空白占位。
+
+这里按原图 32 网格的布局重新取色矢量化：以 64 倍超采样绘制后
+LANCZOS 降采样，得到 16/24/32/48/64/128/256 七种尺寸的 `app.ico`，
+由 csproj 的 `<ApplicationIcon>` 嵌进 exe 的 RT_GROUP_ICON 资源。
 
 <img src="pic/icon.png" width="160">
 
-生成器在 `tools/make_icon.py`（Pillow，1024 超采样后 LANCZOS 降采样），
-产出 `NatTypeTester/app.ico`，含 16/24/32/48/64/128/256 七种尺寸，
-由 csproj 的 `<ApplicationIcon>` 嵌进 exe 的 RT_GROUP_ICON 资源，
-窗口标题栏与任务栏自动跟随。
+生成器：`tools/make_icon.py`（Pillow，无其他依赖）。
 
-各尺寸实际渲染：
+各尺寸实际渲染（下排是 4× 最近邻放大，用来检查小尺寸会不会糊）：
 
 ![](pic/icon-sizes.png)
 
