@@ -63,7 +63,25 @@ Google 的 `stun.l.google.com` 用的是 **19302** 端口，不是 3478，
 所以没放进列表（端口框默认 3478，放进去只会徒增困惑）。
 需要时手动填 `stun.l.google.com` + 端口 `19302`。
 
-### 3. GitHub Actions 编译
+### 3. 图标
+
+上游 exe 用的是 .NET 默认的空白图标，桌面上分不出是什么程序。
+
+新图标：一堵虚线（NAT 边界）被一条双向箭头凿穿 —— UDP 打洞；
+左端绿色是内网侧、右端橙色是公网侧。
+
+<img src="pic/icon.png" width="160">
+
+生成器在 `tools/make_icon.py`（Pillow，1024 超采样后 LANCZOS 降采样），
+产出 `NatTypeTester/app.ico`，含 16/24/32/48/64/128/256 七种尺寸，
+由 csproj 的 `<ApplicationIcon>` 嵌进 exe 的 RT_GROUP_ICON 资源，
+窗口标题栏与任务栏自动跟随。
+
+各尺寸实际渲染：
+
+![](pic/icon-sizes.png)
+
+### 4. GitHub Actions 编译
 
 `.github/workflows/build.yml`：`windows-latest` + `setup-msbuild`，
 `Release|Any CPU` 生成后把 `NatTypeTester.exe` 作为 artifact 上传。
