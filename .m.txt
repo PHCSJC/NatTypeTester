@@ -1,0 +1,1 @@
+ci: surface msbuild errors as annotations + always upload build log

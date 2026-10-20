@@ -23,7 +23,22 @@ jobs:
           Get-ChildItem "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework" -Name
 
       - name: Build (Release / Any CPU)
-        run: msbuild NatTypeTester.sln /p:Configuration=Release /p:Platform="Any CPU" /v:minimal /nologo
+        shell: pwsh
+        run: |
+          msbuild NatTypeTester.sln /p:Configuration=Release /p:Platform="Any CPU" /v:normal /nologo 2>&1 |
+            Tee-Object -FilePath build.log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            # 把编译错误行作为 annotation 暴露出来（否则只有 "exit code 1"，无法远程排查）
+            $errs = Select-String -Path build.log -Pattern 'error|错误' -CaseSensitive:$false |
+                     Select-Object -First 12
+            foreach ($e in $errs) {
+              $line = $e.Line -replace '%', '%25' -replace "`r", '' -replace "`n", '%0A'
+              if ($line.Length -gt 900) { $line = $line.Substring(0, 900) }
+              Write-Host "::error file=build.log,line=$($e.LineNumber)::$line"
+            }
+            exit $code
+          }
 
       - name: Collect artifact
         shell: pwsh
@@ -37,7 +52,15 @@ jobs:
           Copy-Item "$src\NatTypeTester.exe" out\
           if (Test-Path "$src\NatTypeTester.exe.config") { Copy-Item "$src\NatTypeTester.exe.config" out\ }
           Get-ChildItem out | Format-Table Name, Length
-          (Get-FileHash "out\NatTypeTester.exe" -Algorithm SHA256).Hash
+          "SHA256 = " + (Get-FileHash "out\NatTypeTester.exe" -Algorithm SHA256).Hash
+
+      - name: Build log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
